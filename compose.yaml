@@ -1,0 +1,61 @@
+services:
+
+  php:
+    container_name: php
+    image: test:1
+    volumes:
+      - ./docker_config/php.ini:/usr/local/etc/php/php.ini
+      - ./:/var/www
+    depends_on:
+      - mariadb
+    networks:
+      - app-network
+
+  mariadb:
+    image: mariadb:11.5.2
+    container_name: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: 'root'
+      MARIADB_USER: 'user'
+      MARIADB_PASSWORD: 'pass'
+    ports:
+      - '3306:3306'
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: 'user'
+      POSTGRES_PASSWORD: 'pass'
+      POSTGRES_DB: 'db'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  caddy:
+    image: caddy:2.8.4
+    container_name: caddy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./:/var/www
+    ports:
+      - '80:80'
+    networks:
+      - app-network
+    depends_on:
+      - php
+
+volumes:
+  mariadb_data:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
